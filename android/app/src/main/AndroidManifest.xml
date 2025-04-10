@@ -1,0 +1,82 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Internet -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Image -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+
+    <meta-data
+        android:name="com.google.android.gms.auth.api.signin"
+        android:value="DEFAULT" />
+
+
+    <application
+        android:label="Pro Pledge"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+
+            <meta-data
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme"
+            />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+
+    </application>
+
+    <!-- Ensure all sharing apps are available -->
+    <queries>
+        <!-- General sharing -->
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="text/plain" />
+        </intent>
+
+        <!-- WhatsApp -->
+        <package android:name="com.whatsapp" />
+        <package android:name="com.whatsapp.w4b" /> <!-- WhatsApp Business -->
+
+        <!-- Facebook -->
+        <package android:name="com.facebook.katana" />
+        <package android:name="com.facebook.orca" /> <!-- Facebook Messenger -->
+
+        <!-- Twitter -->
+        <package android:name="com.twitter.android" />
+
+        <!-- Instagram -->
+        <package android:name="com.instagram.android" />
+
+        <!-- LinkedIn -->
+        <package android:name="com.linkedin.android" />
+
+        <!-- Telegram -->
+        <package android:name="org.telegram.messenger" />
+
+        <!-- Snapchat -->
+        <package android:name="com.snapchat.android" />
+
+        <!-- Email Apps -->
+        <package android:name="com.google.android.gm" /> <!-- Gmail -->
+        <package android:name="com.microsoft.office.outlook" /> <!-- Outlook -->
+    </queries>
+</manifest>
