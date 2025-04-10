@@ -1,7 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sponsor_karo/components/base/splash_screen.dart';
 import 'package:sponsor_karo/components/forms/post_form.dart';
 import 'package:sponsor_karo/screens/analytics_screen.dart';
 import 'package:sponsor_karo/screens/chats_screen.dart';
@@ -9,8 +7,6 @@ import 'package:sponsor_karo/screens/home_screen.dart';
 import 'package:sponsor_karo/screens/search_screen.dart';
 import 'package:sponsor_karo/screens/settings_screen.dart';
 import 'package:sponsor_karo/screens/transactions_screen.dart';
-import 'package:sponsor_karo/screens/user_profile.dart';
-import 'package:sponsor_karo/services/chat_service.dart';
 import 'package:sponsor_karo/services/public_profile_service.dart';
 import 'package:sponsor_karo/theme_provider.dart';
 

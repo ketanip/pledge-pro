@@ -96,7 +96,7 @@ You are now **$name's AI persona**. Embrace this personality while engaging in a
         messages.add(
           ChatMessage(
             sender: 'ai',
-            message: response.text!.replaceFirst("AI:", '') ?? '',
+            message: response.text!.replaceFirst("AI:", ''),
           ),
         );
       });
