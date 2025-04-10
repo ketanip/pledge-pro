@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sponsor_karo/components/forms/post_form.dart';
@@ -8,6 +9,7 @@ import 'package:sponsor_karo/screens/search_screen.dart';
 import 'package:sponsor_karo/screens/settings_screen.dart';
 import 'package:sponsor_karo/screens/transactions_screen.dart';
 import 'package:sponsor_karo/services/public_profile_service.dart';
+import 'package:sponsor_karo/state/user_provider.dart';
 import 'package:sponsor_karo/theme_provider.dart';
 
 class ScreensPage extends StatefulWidget {
@@ -20,6 +22,8 @@ class ScreensPage extends StatefulWidget {
 class _ScreensPageState extends State<ScreensPage> {
   int _selectedIndex = 0;
   late List<Widget> _screens;
+  final _firebaseAuth = FirebaseAuth.instance;
+  final _publicProfileService = PublicProfileService();
 
   @override
   void initState() {
@@ -30,7 +34,7 @@ class _ScreensPageState extends State<ScreensPage> {
       AnalyticsPage(),
       SearchPage(),
       DonationsScreen(),
-      SettingsPage()
+      SettingsPage(),
     ];
 
     initRun();
@@ -38,6 +42,9 @@ class _ScreensPageState extends State<ScreensPage> {
 
   void initRun() async {
     await PublicProfileService().createPublicProfile();
+    final uid = _firebaseAuth.currentUser?.uid ?? "";
+    final currentUserPublicProfile = await _publicProfileService.getPublicProfileBySub(uid);
+    Provider.of<UserProvider>(context, listen: false).setUser(currentUserPublicProfile);
   }
 
   @override

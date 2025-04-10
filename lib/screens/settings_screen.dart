@@ -1,7 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sponsor_karo/components/base/splash_screen.dart';
+import 'package:sponsor_karo/models/public_profile.dart';
 import 'package:sponsor_karo/screens/user_profile.dart';
+import 'package:sponsor_karo/state/user_provider.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -11,8 +14,7 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  String? _currentUsername;
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  PublicProfile? _currentUser;
 
   @override
   void initState() {
@@ -22,13 +24,12 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void loadData() async {
     try {
-      final userEmail = _firebaseAuth.currentUser?.email;
-      if (userEmail == null) throw Exception("User not logged in");
-
-      final username = userEmail.split('@').first.toLowerCase();
+      final user =
+          Provider.of<UserProvider>(context, listen: false).currentUser;
+      if (user == null) return;
 
       setState(() {
-        _currentUsername = username;
+        _currentUser = user;
       });
     } catch (e) {
       debugPrint('Error loading data: $e');
@@ -46,7 +47,7 @@ class _SettingsPageState extends State<SettingsPage> {
         backgroundColor: colorScheme.surface,
       ),
       body:
-          _currentUsername == null
+          _currentUser == null
               ? const Center(child: CircularProgressIndicator())
               : Padding(
                 padding: const EdgeInsets.all(20),
@@ -84,7 +85,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           MaterialPageRoute(
                             builder:
                                 (_) => UserProfileScreen(
-                                  username: _currentUsername!,
+                                  username: _currentUser?.username ?? "",
                                 ),
                           ),
                         );

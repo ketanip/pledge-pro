@@ -1,11 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sponsor_karo/components/donations/donations_screen.dart';
 import 'package:sponsor_karo/models/public_profile.dart';
 import 'package:sponsor_karo/screens/ask_ai_screen.dart';
 import 'package:sponsor_karo/screens/individual_chat_screen.dart';
 import 'package:sponsor_karo/services/chat_service.dart';
 import 'package:sponsor_karo/services/follow_service.dart';
+import 'package:sponsor_karo/state/user_provider.dart';
 
 class ProfileHeader extends StatefulWidget {
   final PublicProfile publicProfile;
@@ -18,7 +20,6 @@ class ProfileHeader extends StatefulWidget {
 class _ProfileHeaderState extends State<ProfileHeader> {
   final _chatService = ChatService();
   final _followService = FollowService();
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   bool isFollowing = false;
   int followers = 0;
@@ -42,18 +43,14 @@ class _ProfileHeaderState extends State<ProfileHeader> {
       widget.publicProfile.username,
     );
 
-    final userEmail = _firebaseAuth.currentUser?.email;
-
-    if (userEmail == null) {
-      throw Exception("User not logged in");
-    }
-    final username = userEmail.split('@').first.toLowerCase();
+    final user = Provider.of<UserProvider>(context, listen: false).currentUser;
+    if (user == null) return;
 
     setState(() {
       followers = fetchedFollowers.length;
       following = fetchedFollowing.length;
       isFollowing = followingStatus;
-      currentUsername = username;
+      currentUsername = user.username;
     });
   }
 

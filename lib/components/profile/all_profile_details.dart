@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sponsor_karo/components/profile/profile_detail_card.dart';
 import 'package:sponsor_karo/components/profile/profile_details_form.dart';
 import 'package:sponsor_karo/models/detail.dart';
+import 'package:sponsor_karo/state/user_provider.dart';
 
 class ProfileDetailsScreen extends StatefulWidget {
   final List<Detail> details;
@@ -21,7 +23,7 @@ class ProfileDetailsScreen extends StatefulWidget {
 class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
   final Map<String, bool> _expandedSections = {};
   late String _currentUsername;
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  
 
   @override
   void initState() {
@@ -30,15 +32,12 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
   }
 
   void loadData() async {
-    final userEmail = _firebaseAuth.currentUser?.email;
+    
+    final user = Provider.of<UserProvider>(context, listen: false).currentUser;
+    if (user == null) return;
 
-    if (userEmail == null) {
-      throw Exception("User not logged in");
-    }
-
-    final username = userEmail.split('@').first.toLowerCase();
     setState(() {
-      _currentUsername = username;
+      _currentUsername = user.username;
     });
   }
 

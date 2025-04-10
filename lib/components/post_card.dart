@@ -1,6 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:provider/provider.dart';
 import 'package:sponsor_karo/components/post/comment_section.dart';
 import 'package:sponsor_karo/models/post.dart';
 import 'package:sponsor_karo/models/public_profile.dart';
@@ -9,6 +9,7 @@ import 'package:sponsor_karo/screens/user_profile.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sponsor_karo/services/post_service.dart';
 import 'package:sponsor_karo/services/public_profile_service.dart';
+import 'package:sponsor_karo/state/user_provider.dart';
 
 class PostCard extends StatefulWidget {
   final Post post;
@@ -29,7 +30,6 @@ class _PostCardState extends State<PostCard>
   late PublicProfile _publicProfile;
   bool _isLoading = true;
   String currentUsername = '';
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   @override
   void initState() {
@@ -43,19 +43,18 @@ class _PostCardState extends State<PostCard>
       widget.post.username,
     );
 
-    final userEmail = _firebaseAuth.currentUser?.email;
+    final user = Provider.of<UserProvider>(context, listen: false).currentUser;
+    if (user == null) return;
 
-    if (userEmail == null) {
-      throw Exception("User not logged in");
-    }
-    final username = userEmail.split('@').first.toLowerCase();
-
-    final isLiked = await _postService.isPostLiked(widget.post.id, username);
+    final isLiked = await _postService.isPostLiked(
+      widget.post.id,
+      user.username,
+    );
 
     setState(() {
       _publicProfile = profile;
       _isLoading = false;
-      currentUsername = username;
+      currentUsername = user.username;
       likeCount = widget.post.likeCount;
       _isLiked = isLiked;
     });
@@ -161,7 +160,8 @@ class _PostCardState extends State<PostCard>
                       context,
                       MaterialPageRoute(
                         builder:
-                            (_) => AskAIScreen(username: _publicProfile.username),
+                            (_) =>
+                                AskAIScreen(username: _publicProfile.username),
                       ),
                     );
                   },
@@ -173,7 +173,11 @@ class _PostCardState extends State<PostCard>
                     if (value == "Delete") {
                       await _postService.deletePost(widget.post.id);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Deleted successfully, refresh to see changes.")),
+                        const SnackBar(
+                          content: Text(
+                            "Deleted successfully, refresh to see changes.",
+                          ),
+                        ),
                       );
                     } else if (value == "Report") {
                       ScaffoldMessenger.of(context).showSnackBar(
