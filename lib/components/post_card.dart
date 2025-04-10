@@ -276,15 +276,6 @@ class _PostCardState extends State<PostCard>
                         subject: "Check this out",
                       ),
                 ),
-                const Spacer(),
-                IconButton(
-                  icon: Icon(
-                    isBookmarked ? Icons.bookmark : Icons.bookmark_outline,
-                    size: 30,
-                    color: colors.primary,
-                  ),
-                  onPressed: toggleBookmark,
-                ),
               ],
             ),
           ),
