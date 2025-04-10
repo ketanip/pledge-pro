@@ -5,7 +5,6 @@ import 'package:sponsor_karo/components/post/comment_section.dart';
 import 'package:sponsor_karo/models/post.dart';
 import 'package:sponsor_karo/models/public_profile.dart';
 import 'package:sponsor_karo/screens/ask_ai_screen.dart';
-import 'package:sponsor_karo/screens/individual_chat_screen.dart';
 import 'package:sponsor_karo/screens/user_profile.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sponsor_karo/services/post_service.dart';
