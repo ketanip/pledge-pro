@@ -149,13 +149,6 @@ class _ScreensPageState extends State<ScreensPage> {
           },
         ),
         IconButton(
-          icon: Icon(
-            Icons.notifications_none_outlined,
-            color: theme.iconTheme.color,
-          ),
-          onPressed: () {}, // Open Notifications Screen
-        ),
-        IconButton(
           icon: Icon(Icons.chat_bubble_outline, color: theme.iconTheme.color),
           onPressed: () {
             Navigator.push(
