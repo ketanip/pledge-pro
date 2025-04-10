@@ -106,7 +106,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
               Row(
                 children: [
                   Text(
-                    widget.publicProfile.username,
+                    widget.publicProfile.fullName,
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),

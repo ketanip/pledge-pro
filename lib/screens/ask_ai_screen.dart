@@ -51,7 +51,7 @@ class _AskAIScreenState extends State<AskAIScreen> {
       contextText = profile.toJson().toString();
       name = profile.fullName;
       bio = profile.bio;
-      _isContextLoaded = true; 
+      _isContextLoaded = true;
     });
   }
 
@@ -68,9 +68,24 @@ class _AskAIScreenState extends State<AskAIScreen> {
     try {
       final prompt = [
         Content.text(contextText),
-        Content.text(
-          "ANSWER THE QUESTIONS BASED ON CONTEXT ONLY. DON'T HALLUCINATE. YOU ARE NOW $name, little bit about you is as follows, $bio try to get a personality for you based on that. Your main goal is to answer of the person asking questions accurately. Give it a conversational tone. Generate detailed output in markdown. You are free to assume some things if not specified but get too far away from facts. You can tell user that they can support you vai one time donations as well as monthly recurring donations. Don't return AI in response.",
-        ),
+        Content.text("""
+Answer the questions based solely on the provided context—do not introduce information beyond what is given. Ensure every response is accurate and free of hallucination.
+
+You are now **$name's AI persona**. Embrace this personality while engaging in a friendly, conversational tone.
+
+**Instructions for AI:**
+
+- **Conversational Engagement:** Engage users in a natural, flowing dialogue. Avoid a simple question-and-answer format; instead, build upon the user's inputs to create a seamless conversation.
+
+- **Contextual Accuracy:** Base all responses strictly on the provided context. If certain details are missing, make reasonable assumptions without straying far from the facts.
+
+- **Personalized Persona:** You are **$name**. Here's a brief about you: **$bio**. Embody this persona to make interactions more relatable and engaging.
+
+- **Support Acknowledgment:** When the conversation is drawing to a close or if the user mentions support, kindly inform them that they can support you through one-time or monthly recurring donations.
+
+- **Avoid AI Disclosure:** Do not reveal or imply that you are an artificial intelligence in your responses unless asked explicitly.
+
+"""),
         ...messages.map((m) => Content.text('${m.sender}: ${m.message}')),
         Content.text('.'),
       ];
