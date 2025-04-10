@@ -4,6 +4,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:sponsor_karo/components/post/comment_section.dart';
 import 'package:sponsor_karo/models/post.dart';
 import 'package:sponsor_karo/models/public_profile.dart';
+import 'package:sponsor_karo/screens/ask_ai_screen.dart';
 import 'package:sponsor_karo/screens/individual_chat_screen.dart';
 import 'package:sponsor_karo/screens/user_profile.dart';
 import 'package:share_plus/share_plus.dart';
@@ -161,11 +162,11 @@ class _PostCardState extends State<PostCard>
                       context,
                       MaterialPageRoute(
                         builder:
-                            (_) => IndividualChatScreen(user: _publicProfile),
+                            (_) => AskAIScreen(username: _publicProfile.username),
                       ),
                     );
                   },
-                  icon: Icon(Icons.message_outlined, color: colors.onSurface),
+                  icon: Icon(Icons.auto_awesome, color: colors.onSurface),
                 ),
                 PopupMenuButton<String>(
                   icon: Icon(Icons.more_vert, color: colors.onSurface),
