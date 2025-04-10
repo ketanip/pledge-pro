@@ -69,15 +69,17 @@ class _SearchPageState extends State<SearchPage> {
     final searchText = _searchController.text.toLowerCase();
 
     setState(() {
-      _filteredUsers = _allUsers.where((user) {
-        final matchesSearch = user.username.toLowerCase().contains(searchText) ||
-            user.fullName.toLowerCase().contains(searchText);
+      _filteredUsers =
+          _allUsers.where((user) {
+            final matchesSearch =
+                user.username.toLowerCase().contains(searchText) ||
+                user.fullName.toLowerCase().contains(searchText);
 
-        final matchesAthlete = !_athletesOnly || user.details.length > 1;
-        final matchesVerified = !_verifiedOnly || user.followerCount > 20;
+            final matchesAthlete = !_athletesOnly || user.details.length > 1;
+            final matchesVerified = !_verifiedOnly || user.followerCount > 20;
 
-        return matchesSearch && matchesAthlete && matchesVerified;
-      }).toList();
+            return matchesSearch && matchesAthlete && matchesVerified;
+          }).toList();
     });
   }
 
@@ -88,74 +90,84 @@ class _SearchPageState extends State<SearchPage> {
     return _isLoading
         ? const Center(child: CircularProgressIndicator())
         : Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: "Search users...",
-                          prefixIcon: Icon(Icons.search, color: theme.iconTheme.color),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(100),
-                          ),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: "Search users...",
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: theme.iconTheme.color,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(100),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _showFilters = !_showFilters;
-                        });
-                      },
-                      icon: const Icon(Icons.filter_alt_sharp),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _showFilters = !_showFilters;
+                      });
+                    },
+                    icon: const Icon(Icons.filter_alt_sharp),
+                  ),
+                ],
               ),
-              const SizedBox(height: 10),
+            ),
+            const SizedBox(height: 10),
 
-              if (_showFilters)
-                Column(
-                  children: [
-                    SwitchListTile(
-                      title: Text("Athletes Only", style: theme.textTheme.bodyMedium),
-                      value: _athletesOnly,
-                      onChanged: (value) {
-                        setState(() {
-                          _athletesOnly = value;
-                        });
-                        _onFilterChanged();
-                      },
+            if (_showFilters)
+              Column(
+                children: [
+                  SwitchListTile(
+                    title: Text(
+                      "Athletes Only",
+                      style: theme.textTheme.bodyMedium,
                     ),
-                    SwitchListTile(
-                      title: Text("Verified Only", style: theme.textTheme.bodyMedium),
-                      value: _verifiedOnly,
-                      onChanged: (value) {
-                        setState(() {
-                          _verifiedOnly = value;
-                        });
-                        _onFilterChanged();
-                      },
+                    value: _athletesOnly,
+                    onChanged: (value) {
+                      setState(() {
+                        _athletesOnly = value;
+                      });
+                      _onFilterChanged();
+                    },
+                  ),
+                  SwitchListTile(
+                    title: Text(
+                      "Verified Only",
+                      style: theme.textTheme.bodyMedium,
                     ),
-                  ],
-                ),
+                    value: _verifiedOnly,
+                    onChanged: (value) {
+                      setState(() {
+                        _verifiedOnly = value;
+                      });
+                      _onFilterChanged();
+                    },
+                  ),
+                ],
+              ),
 
-              const SizedBox(height: 10),
+            const SizedBox(height: 10),
 
-              Expanded(
-                child: _filteredUsers.isEmpty
-                    ? Center(
+            Expanded(
+              child:
+                  _filteredUsers.isEmpty
+                      ? Center(
                         child: Text(
                           "No users found",
                           style: theme.textTheme.bodyLarge,
                         ),
                       )
-                    : ListView.builder(
+                      : ListView.builder(
                         itemCount: _filteredUsers.length,
                         itemBuilder: (context, index) {
                           final user = _filteredUsers[index];
@@ -164,30 +176,42 @@ class _SearchPageState extends State<SearchPage> {
                               radius: 18,
                               backgroundImage: NetworkImage(user.profilePic),
                             ),
-                            title: Text(user.fullName, style: theme.textTheme.bodyLarge),
+                            title: Text(
+                              user.fullName,
+                              style: theme.textTheme.bodyLarge,
+                            ),
                             subtitle: Text(
                               user.bio.length > 30
                                   ? "${user.bio.substring(0, 30)}..."
                                   : user.bio,
-                              style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: Colors.grey,
+                              ),
                             ),
-                            trailing: user.followerCount > 20
-                                ? const Icon(Icons.verified, color: Colors.blue, size: 18)
-                                : null,
+                            trailing:
+                                user.followerCount > 20
+                                    ? const Icon(
+                                      Icons.verified,
+                                      color: Colors.blue,
+                                      size: 18,
+                                    )
+                                    : null,
                             onTap: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      UserProfileScreen(username: user.username),
+                                  builder:
+                                      (context) => UserProfileScreen(
+                                        username: user.username,
+                                      ),
                                 ),
                               );
                             },
                           );
                         },
                       ),
-              ),
-            ],
-          );
+            ),
+          ],
+        );
   }
 }
