@@ -17,6 +17,7 @@ class _DonationScreenState extends State<DonationScreen>
 
   int _selectedAmount = 100; // Default amount for one-time donation
   String _selectedPlanId = "plan_QDMGAvWIpjPRQT"; // Default: Bronze Plan
+  bool _isLoading = false;
 
   final PaymentsService _paymentsService = PaymentsService();
 
@@ -45,6 +46,10 @@ class _DonationScreenState extends State<DonationScreen>
   }
 
   void _makeOneTimeDonation() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     final orderId = await _paymentsService.createOneTimeCheckout(
       beneficiaryId: widget.beneficiaryId,
       amount: _selectedAmount * 100,
@@ -57,10 +62,18 @@ class _DonationScreenState extends State<DonationScreen>
       _razorpay.open(options);
     } catch (e) {
       debugPrint('Error: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
   void _subscribeToPlan() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     final subscriptionId = await _paymentsService.createSubscriptionCheckout(
       beneficiaryId: widget.beneficiaryId,
       planId: _selectedPlanId,
@@ -76,6 +89,10 @@ class _DonationScreenState extends State<DonationScreen>
       _razorpay.open(options);
     } catch (e) {
       debugPrint('Error: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -121,15 +138,24 @@ class _DonationScreenState extends State<DonationScreen>
         children: [_buildPlanSelection(theme), _buildOneTimeDonation(theme)],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed:
-            _tabController.index == 0 ? _subscribeToPlan : _makeOneTimeDonation,
+        onPressed: () {
+          if (!_isLoading) {
+            _tabController.index == 0
+                ? _subscribeToPlan()
+                : _makeOneTimeDonation();
+          }
+          ;
+        },
         backgroundColor: theme.colorScheme.primary,
-        label: Text(
-          _tabController.index == 0
-              ? "Subscribe ₹$_selectedAmount"
-              : "Donate ₹$_selectedAmount",
-          style: TextStyle(color: Colors.white),
-        ),
+        label:
+            _isLoading
+                ? Text("Processing", style: TextStyle(color: Colors.white))
+                : Text(
+                  _tabController.index == 0
+                      ? "Subscribe ₹$_selectedAmount"
+                      : "Donate ₹$_selectedAmount",
+                  style: TextStyle(color: Colors.white),
+                ),
         icon: Icon(Icons.payment, color: Colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
