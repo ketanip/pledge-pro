@@ -1,146 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:sponsor_karo/models/public_profile.dart';
+import 'package:sponsor_karo/models/subscription.dart';
+import 'package:sponsor_karo/models/transaction.dart';
+import 'package:sponsor_karo/screens/user_profile.dart';
+import 'package:sponsor_karo/services/payments_service.dart';
+import 'package:sponsor_karo/services/public_profile_service.dart';
 
-// Assuming the following types and demo data are defined somewhere in your project:
-
-class DonationTransaction {
-  final String id;
-  final double amount;
-  final String currency;
-  final String sentTo; // recipient userId
-  final String sentBy; // donor userId
-  final DateTime timestamp;
-
-  DonationTransaction({
-    required this.id,
-    required this.amount,
-    required this.currency,
-    required this.sentTo,
-    required this.sentBy,
-    required this.timestamp,
-  });
-}
-
-class Pledge {
-  final String id;
-  final double amount;
-  final String currency;
-  final DateTime startedOn;
-  final double totalAmountSentTillDate;
-  final bool active;
-  final String sentTo; // recipient athlete userId
-  final String sentBy; // donor userId
-  final List<DonationTransaction> transactions;
-
-  Pledge({
-    required this.id,
-    required this.amount,
-    required this.currency,
-    required this.startedOn,
-    required this.totalAmountSentTillDate,
-    required this.active,
-    required this.sentTo,
-    required this.sentBy,
-    this.transactions = const [],
-  });
-}
-
-// Demo data for one-time transactions.
-final List<DonationTransaction> demoTransactions = [
-  DonationTransaction(
-    id: 't1',
-    amount: 50.0,
-    currency: 'USD',
-    sentTo: 'athlete1',
-    sentBy: 'donor1',
-    timestamp: DateTime.parse("2025-03-01T12:34:56Z"),
-  ),
-  DonationTransaction(
-    id: 't2',
-    amount: 75.0,
-    currency: 'USD',
-    sentTo: 'athlete2',
-    sentBy: 'donor1',
-    timestamp: DateTime.parse("2025-03-05T12:34:56Z"),
-  ),
-  DonationTransaction(
-    id: 't3',
-    amount: 100.0,
-    currency: 'USD',
-    sentTo: 'athlete3',
-    sentBy: 'donor2',
-    timestamp: DateTime.parse("2025-03-10T12:34:56Z"),
-  ),
-];
-
-// Demo data for recurring pledges.
-final List<Pledge> demoPledges = [
-  Pledge(
-    id: 'p1',
-    amount: 20.0,
-    currency: 'USD',
-    startedOn: DateTime.parse("2025-01-01T00:00:00Z"),
-    totalAmountSentTillDate: 40.0,
-    active: true,
-    sentTo: 'athlete1',
-    sentBy: 'donor1',
-    transactions: [
-      DonationTransaction(
-        id: 'pt1',
-        amount: 20.0,
-        currency: 'USD',
-        sentTo: 'athlete1',
-        sentBy: 'donor1',
-        timestamp: DateTime.parse("2025-01-01T12:00:00Z"),
-      ),
-      DonationTransaction(
-        id: 'pt2',
-        amount: 20.0,
-        currency: 'USD',
-        sentTo: 'athlete1',
-        sentBy: 'donor1',
-        timestamp: DateTime.parse("2025-02-01T12:00:00Z"),
-      ),
-    ],
-  ),
-  Pledge(
-    id: 'p2',
-    amount: 30.0,
-    currency: 'USD',
-    startedOn: DateTime.parse("2025-01-15T00:00:00Z"),
-    totalAmountSentTillDate: 90.0,
-    active: false,
-    sentTo: 'athlete2',
-    sentBy: 'donor2',
-    transactions: [
-      DonationTransaction(
-        id: 'pt3',
-        amount: 30.0,
-        currency: 'USD',
-        sentTo: 'athlete2',
-        sentBy: 'donor2',
-        timestamp: DateTime.parse("2025-01-15T12:00:00Z"),
-      ),
-      DonationTransaction(
-        id: 'pt4',
-        amount: 30.0,
-        currency: 'USD',
-        sentTo: 'athlete2',
-        sentBy: 'donor2',
-        timestamp: DateTime.parse("2025-02-15T12:00:00Z"),
-      ),
-      DonationTransaction(
-        id: 'pt5',
-        amount: 30.0,
-        currency: 'USD',
-        sentTo: 'athlete2',
-        sentBy: 'donor2',
-        timestamp: DateTime.parse("2025-03-15T12:00:00Z"),
-      ),
-    ],
-  ),
-];
-
-// Main Donations Screen
 class DonationsScreen extends StatefulWidget {
   const DonationsScreen({super.key});
 
@@ -151,13 +16,15 @@ class DonationsScreen extends StatefulWidget {
 class _DonationsScreenState extends State<DonationsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final List<DonationTransaction> transactions = demoTransactions;
-  final List<Pledge> pledges = demoPledges;
+  List<Transaction> _transactions = [];
+  List<Subscription> _pledges = [];
+  final PaymentsService _paymentsService = PaymentsService();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    loadData();
   }
 
   @override
@@ -166,42 +33,50 @@ class _DonationsScreenState extends State<DonationsScreen>
     super.dispose();
   }
 
+  void loadData() async {
+    final transactions = await _paymentsService.getAllDonationsMade();
+    final pledges = await _paymentsService.getSubscriptionsByDonor();
+
+    if (!mounted) return;
+
+    setState(() {
+      _transactions = transactions;
+      _pledges = pledges;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: DonationAppBar(tabController: _tabController),
-      body: TabBarView(
-        controller: _tabController,
+      body: Column(
         children: [
-          OneTimeTransactionsTab(transactions: transactions),
-          PledgesTab(pledges: pledges),
+          Container(
+            color: Theme.of(context).primaryColor,
+            child: SafeArea(
+              bottom: false,
+              child: TabBar(
+                controller: _tabController,
+                tabs: const [Tab(text: "One-Time"), Tab(text: "Pledges")],
+              ),
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                OneTimeTransactionsTab(transactions: _transactions),
+                PledgesTab(pledges: _pledges),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-// Custom AppBar with Tabs
-class DonationAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final TabController tabController;
-  const DonationAppBar({super.key, required this.tabController});
-
-  @override
-  Widget build(BuildContext context) {
-    return TabBar(
-      controller: tabController,
-      indicatorColor: Theme.of(context).primaryColor,
-      tabs: const [Tab(text: "One-Time"), Tab(text: "Pledges")],
-    );
-  }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(100);
-}
-
-// One-Time Donations Tab
 class OneTimeTransactionsTab extends StatelessWidget {
-  final List<DonationTransaction> transactions;
+  final List<Transaction> transactions;
   const OneTimeTransactionsTab({super.key, required this.transactions});
 
   @override
@@ -215,37 +90,65 @@ class OneTimeTransactionsTab extends StatelessWidget {
       itemCount: transactions.length,
       itemBuilder: (context, index) {
         final tx = transactions[index];
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          elevation: 2,
-          child: ListTile(
-            leading: Icon(
-              Icons.monetization_on,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            title: Text(
-              "\$${tx.amount.toStringAsFixed(2)}",
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text("Sent by ${tx.sentBy} to ${tx.sentTo}"),
-            trailing: Text(
-              tx.timestamp.toLocal().toString().split(' ')[0],
-              style: const TextStyle(fontSize: 12),
-            ),
-          ),
+        final _publicProfileService = PublicProfileService();
+
+        return FutureBuilder<PublicProfile>(
+          future: _publicProfileService.getPublicProfileBySub(tx.beneficiaryId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const ListTile(
+                title: Text("Loading..."),
+                subtitle: Text("Fetching athlete info"),
+              );
+            }
+
+            if (!snapshot.hasData || snapshot.hasError) {
+              return const ListTile(title: Text("Error loading athlete"));
+            }
+
+            final athlete = snapshot.data!;
+            return Card(
+              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              elevation: 2,
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: NetworkImage(athlete.profilePic),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (_) => UserProfileScreen(username: athlete.username),
+                    ),
+                  );
+                },
+                title: Text(
+                  "₹${(tx.amount / 100).toStringAsFixed(2)} ${tx.currency}",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text("Sent to ${athlete.fullName}"),
+                trailing: Text(
+                  tx.createdAt.toDate().toString().split(' ')[0],
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ),
+            );
+          },
         );
       },
     );
   }
 }
 
-// Pledges Tab
 class PledgesTab extends StatelessWidget {
-  final List<Pledge> pledges;
+  final List<Subscription> pledges;
   const PledgesTab({super.key, required this.pledges});
 
   @override
   Widget build(BuildContext context) {
+    final _publicProfileService = PublicProfileService();
+
     if (pledges.isEmpty) {
       return const Center(child: Text("No active pledges."));
     }
@@ -254,132 +157,132 @@ class PledgesTab extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: pledges.length,
       itemBuilder: (context, index) {
-        return PledgeCard(pledge: pledges[index]);
+        final pledge = pledges[index];
+
+        return FutureBuilder<PublicProfile>(
+          future: _publicProfileService.getPublicProfileBySub(
+            pledge.beneficiaryId,
+          ),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const ListTile(title: Text("Loading beneficiary..."));
+            }
+
+            if (!snapshot.hasData || snapshot.hasError) {
+              return const ListTile(title: Text("Beneficiary unavailable"));
+            }
+
+            return PledgeCard(pledge: pledge, beneficiary: snapshot.data!);
+          },
+        );
       },
     );
   }
 }
 
-// Pledge Card with Expandable Transactions
+final plans = [
+  {"id": "plan_QDMGibsikMSB6q", "name": "Platinum", "amount": 2000},
+  {"id": "plan_QDMGYPxhlUaYWk", "name": "Gold", "amount": 1000},
+  {"id": "plan_QDMGQ1YxILqHvm", "name": "Silver", "amount": 500},
+  {"id": "plan_QDMGAvWIpjPRQT", "name": "Bronze", "amount": 100},
+];
+
 class PledgeCard extends StatefulWidget {
-  final Pledge pledge;
-  const PledgeCard({super.key, required this.pledge});
+  final Subscription pledge;
+  final PublicProfile beneficiary;
+
+  const PledgeCard({
+    super.key,
+    required this.pledge,
+    required this.beneficiary,
+  });
 
   @override
   _PledgeCardState createState() => _PledgeCardState();
 }
 
 class _PledgeCardState extends State<PledgeCard> {
-  bool _showTransactions = false;
+  final _paymentsService = PaymentsService();
 
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      elevation: 2,
-      child: Column(
-        children: [
-          ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8,
-            ),
-            leading: Icon(
-              Icons.person,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            title: Text(
-              widget.pledge.sentTo,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(
-              "Pledge: \$${widget.pledge.amount.toStringAsFixed(2)} per month",
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildStatusIndicator(),
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert),
-                  onSelected: (value) {
-                    // Handle Stop or Modify pledge actions
-                  },
-                  itemBuilder:
-                      (context) => const [
-                        PopupMenuItem(
-                          value: "Stop",
-                          child: Text("Stop Pledge"),
-                        ),
-                        PopupMenuItem(
-                          value: "Modify",
-                          child: Text("Modify Pledge"),
-                        ),
-                      ],
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-          TextButton(
-            onPressed:
-                () => setState(() => _showTransactions = !_showTransactions),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text("Show Transactions", style: TextStyle(fontSize: 14)),
-                Icon(_showTransactions ? Icons.expand_less : Icons.expand_more),
-              ],
-            ),
-          ),
-          if (_showTransactions) _buildTransactionList(),
-        ],
-      ),
+  void _handlePledgeAction(String action) async {
+    if (action == "Cancel") {
+      if (widget.pledge.status == "active") {
+        await _paymentsService.cancelSubscription(widget.pledge.id);
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Pledge cancelled")));
+    }
+  }
+
+  Map<String, dynamic>? _getPlanDetails(String planId) {
+    return plans.firstWhere(
+      (plan) => plan['id'] == planId,
+      orElse: () => {"name": "Unknown", "amount": 0},
     );
   }
 
-  Widget _buildStatusIndicator() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: widget.pledge.active ? Colors.green[100] : Colors.red[100],
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        widget.pledge.active ? "Active" : "Inactive",
-        style: TextStyle(
-          color: widget.pledge.active ? Colors.green : Colors.red,
-          fontSize: 12,
+  @override
+  Widget build(BuildContext context) {
+    final isActive = widget.pledge.status == "active";
+    final plan = _getPlanDetails(widget.pledge.planId);
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      elevation: 2,
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundImage: NetworkImage(widget.beneficiary.profilePic),
+        ),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (_) =>
+                      UserProfileScreen(username: widget.beneficiary.username),
+            ),
+          );
+        },
+        title: Text(
+          widget.beneficiary.fullName,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text("${plan?['name']}: ₹${plan?['amount']} / month"),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildStatusIndicator(isActive),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: _handlePledgeAction,
+              itemBuilder:
+                  (context) => const [
+                    PopupMenuItem(
+                      value: "Cancel",
+                      child: Text("Cancel Pledge"),
+                    ),
+                  ],
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildTransactionList() {
+  Widget _buildStatusIndicator(bool isActive) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        children:
-            widget.pledge.transactions.map((tx) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      tx.timestamp.toLocal().toString().split(' ')[0],
-                      style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                    ),
-                    Text(
-                      "\$${tx.amount.toStringAsFixed(2)}",
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: isActive ? Colors.green[100] : Colors.red[100],
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        isActive ? "Active" : widget.pledge.status,
+        style: TextStyle(
+          color: isActive ? Colors.green : Colors.red,
+          fontSize: 12,
+        ),
       ),
     );
   }
