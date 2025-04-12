@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sponsor_karo/components/post_card.dart';
 import 'package:sponsor_karo/components/profile/all_profile_details.dart';
 import 'package:sponsor_karo/components/profile/profile_header.dart';
@@ -8,6 +9,7 @@ import 'package:sponsor_karo/models/post.dart';
 import 'package:sponsor_karo/models/public_profile.dart';
 import 'package:sponsor_karo/services/post_service.dart';
 import 'package:sponsor_karo/services/public_profile_service.dart';
+import 'package:sponsor_karo/state/user_provider.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final String username;
@@ -47,18 +49,14 @@ class _UserProfileScreenState extends State<UserProfileScreen>
       final PostService _postService = PostService();
       final posts = await _postService.getPostByUsername(widget.username);
 
-      final userEmail = _firebaseAuth.currentUser?.email;
-
-      if (userEmail == null) {
-        throw Exception("User not logged in");
-      }
-      final username = userEmail.split('@').first.toLowerCase();
+      final user = Provider.of<UserProvider>(context, listen: false).currentUser;
+      if (user == null) return;
 
       setState(() {
         _public_profile = profile;
         _userPosts = posts;
         _isLoading = false;
-        _currentUsername = username;
+        _currentUsername = user.username;
       });
     } catch (e) {
       print('Error loading data: $e');
@@ -160,7 +158,10 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                 ),
 
             // Details Tab
-            ProfileDetailsScreen(details: _public_profile.details, username: _public_profile.username,),
+            ProfileDetailsScreen(
+              details: _public_profile.details,
+              username: _public_profile.username,
+            ),
           ],
         ),
       ),

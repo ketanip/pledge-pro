@@ -25,6 +25,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
   int followers = 0;
   int following = 0;
   String currentUsername = '';
+  bool _isAthlete = false;
 
   @override
   void initState() {
@@ -51,6 +52,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
       following = fetchedFollowing.length;
       isFollowing = followingStatus;
       currentUsername = user.username;
+      _isAthlete = widget.publicProfile.details.isNotEmpty;
     });
   }
 
@@ -138,131 +140,133 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                 ),
               ),
               const SizedBox(height: 12),
-              Row(
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
                 children: [
-                  Expanded(
-                    child: _buildOutlinedButton(
-                      context,
-                      isFollowing ? "Following" : "Follow",
-                      Icons.person_add,
-                      () async {
-                        if (isFollowing) {
-                          await _followService.unfollowUser(
-                            widget.publicProfile.username,
+                  
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width / 2 - 21,
+                      child: _buildOutlinedButton(
+                        context,
+                        isFollowing ? "Following" : "Follow",
+                        Icons.person_add,
+                        () async {
+                          if (isFollowing) {
+                            await _followService.unfollowUser(
+                              widget.publicProfile.username,
+                            );
+                            setState(() => isFollowing = false);
+                            _showSnackBar(
+                              context,
+                              "Unfollowed successfully",
+                              colorScheme,
+                            );
+                            setState(() => followers--);
+                          } else {
+                            await _followService.followUser(
+                              widget.publicProfile.username,
+                            );
+                            setState(() => isFollowing = true);
+                            _showSnackBar(
+                              context,
+                              "Followed successfully",
+                              colorScheme,
+                            );
+                            setState(() => followers++);
+                          }
+                        },
+                      ),
+                    ),
+
+                  
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width / 2 - 21,
+                      child: _buildOutlinedButton(
+                        context,
+                        "Message",
+                        Icons.message,
+                        () {
+                          _chatService.createChatWithUid(
+                            widget.publicProfile.uid,
                           );
-                          setState(() => isFollowing = false);
-                          _showSnackBar(
+                          Navigator.push(
                             context,
-                            "Unfollowed successfully",
-                            colorScheme,
-                          );
-                          setState(() {
-                            followers--;
-                          });
-                        } else {
-                          await _followService.followUser(
-                            widget.publicProfile.username,
-                          );
-                          setState(() => isFollowing = true);
-                          _showSnackBar(
-                            context,
-                            "Followed successfully",
-                            colorScheme,
-                          );
-                          setState(() {
-                            followers++;
-                          });
-                        }
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildPrimaryButton(
-                      context,
-                      "Sponsor",
-                      Icons.attach_money,
-                      () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => DonationScreen(
-                                  beneficiaryId: widget.publicProfile.uid,
-                                ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildOutlinedButton(
-                      context,
-                      "Message",
-                      Icons.message,
-                      () {
-                        _chatService.createChatWithUid(
-                          widget.publicProfile.uid,
-                        );
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => IndividualChatScreen(
-                                  user: widget.publicProfile,
-                                ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => AskAIScreen(
-                                  username: widget.publicProfile.username,
-                                ),
-                          ),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Colors.blue, Colors.purple],
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.attach_money, color: Colors.white),
-                            SizedBox(width: 8),
-                            Text(
-                              "Ask AI",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
+                            MaterialPageRoute(
+                              builder:
+                                  (_) => IndividualChatScreen(
+                                    user: widget.publicProfile,
+                                  ),
                             ),
-                          ],
+                          );
+                        },
+                      ),
+                    ),
+
+                  if (_isAthlete)
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width / 2 - 21,
+                      child: _buildPrimaryButton(
+                        context,
+                        "Sponsor",
+                        Icons.attach_money,
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (_) => DonationScreen(
+                                    beneficiaryId: widget.publicProfile.uid,
+                                  ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+                  if (_isAthlete)
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width / 2 - 21,
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (_) => AskAIScreen(
+                                    username: widget.publicProfile.username,
+                                  ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 11,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Colors.blue, Colors.purple],
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.auto_awesome, color: Colors.white, size: 16),
+                              SizedBox(width: 8),
+                              Text(
+                                "Ask AI",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
               const SizedBox(height: 10),
