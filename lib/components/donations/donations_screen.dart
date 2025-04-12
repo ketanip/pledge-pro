@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:sponsor_karo/services/payments_service.dart';
 
 class DonationScreen extends StatefulWidget {
-  const DonationScreen({super.key});
+  final String beneficiaryId;
+  const DonationScreen({super.key, required this.beneficiaryId});
 
   @override
   _DonationScreenState createState() => _DonationScreenState();
@@ -12,8 +14,11 @@ class _DonationScreenState extends State<DonationScreen>
     with SingleTickerProviderStateMixin {
   late Razorpay _razorpay;
   late TabController _tabController;
+
   int _selectedAmount = 100; // Default amount for one-time donation
   String _selectedPlanId = "plan_QDMGAvWIpjPRQT"; // Default: Bronze Plan
+
+  final PaymentsService _paymentsService = PaymentsService();
 
   final List<Map<String, dynamic>> _plans = [
     {"id": "plan_QDMGibsikMSB6q", "name": "Platinum", "amount": 2000},
@@ -39,15 +44,14 @@ class _DonationScreenState extends State<DonationScreen>
     super.dispose();
   }
 
-  void _makeOneTimeDonation() {
-    var options = {
-      'key': 'rzp_test_Pu51sPYrGa9uUt',
-      'amount': _selectedAmount * 100, // Convert to paisa
-      'currency': 'INR',
-      'name': 'ProPledge',
-      'description': 'One-Time Donation',
-      'prefill': {'email': 'donor@example.com', 'contact': '9876543210'},
-    };
+  void _makeOneTimeDonation() async {
+    final orderId = await _paymentsService.createOneTimeCheckout(
+      beneficiaryId: widget.beneficiaryId,
+      amount: _selectedAmount * 100,
+      currency: "INR",
+    );
+
+    var options = {'key': 'rzp_test_whDqyjdOCKuOGt', 'order_id': orderId};
 
     try {
       _razorpay.open(options);
@@ -56,15 +60,16 @@ class _DonationScreenState extends State<DonationScreen>
     }
   }
 
-  void _subscribeToPlan() {
+  void _subscribeToPlan() async {
+    final subscriptionId = await _paymentsService.createSubscriptionCheckout(
+      beneficiaryId: widget.beneficiaryId,
+      planId: _selectedPlanId,
+    );
+
     var options = {
-      'key': 'rzp_test_Pu51sPYrGa9uUt',
-      'plan_id': _selectedPlanId,
-      'subscription_start_at':
-          (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 10,
+      'key': 'rzp_test_whDqyjdOCKuOGt',
+      'subscription_id': subscriptionId,
       'customer_notify': 1,
-      'email': 'user@example.com',
-      'contact': '9876543210',
     };
 
     try {

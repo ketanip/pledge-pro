@@ -185,7 +185,12 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                       () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => DonationScreen()),
+                          MaterialPageRoute(
+                            builder:
+                                (_) => DonationScreen(
+                                  beneficiaryId: widget.publicProfile.uid,
+                                ),
+                          ),
                         );
                       },
                     ),

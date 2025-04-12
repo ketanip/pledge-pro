@@ -61,6 +61,7 @@ dependencies:
   firebase_vertexai: ^1.5.0
   flutter_markdown: ^0.7.7
   flutter_launcher_icons: ^0.14.3
+  cloud_functions: ^5.4.0
   
 dev_dependencies:
   flutter_test:
