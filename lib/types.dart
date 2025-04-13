@@ -1,26 +1,24 @@
-class DonationTransaction {
-  final String id;
-  final double amount;
-  final DateTime date;
+import 'package:sponsor_karo/models/public_profile.dart';
+import 'package:sponsor_karo/models/transaction.dart';
 
-  DonationTransaction({
-    required this.id,
-    required this.amount,
-    required this.date,
-  });
-}
+class DonorTransactions {
+  final PublicProfile donor;
+  final List<Transaction> transactions;
+  final int donationThisMonth;
+  final int totalDonations;
 
-class Donor {
-  final String username;
-  final double monthlyAmount;
-  final double totalAmount;
-  final List<DonationTransaction> transactions;
-  // You can add additional fields (e.g., userId, profileImage, etc.) as needed.
-
-  Donor({
-    required this.username,
-    required this.monthlyAmount,
-    required this.totalAmount,
+  DonorTransactions({
+    required this.donor,
     required this.transactions,
+    required this.donationThisMonth,
+    required this.totalDonations,
   });
+
+  // Optionally, you can add a method to convert it to JSON or other useful methods.
+  Map<String, dynamic> toJson() => {
+    'donor': donor.toJson(),
+    'transactions': transactions.map((t) => t.toJson()).toList(),
+    'donationThisMonth': donationThisMonth,
+    'totalDonations': totalDonations,
+  };
 }

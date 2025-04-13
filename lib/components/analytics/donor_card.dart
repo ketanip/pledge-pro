@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:sponsor_karo/types.dart';
 
 class DonorCard extends StatefulWidget {
-  final Donor donor;
-  const DonorCard({super.key, required this.donor});
+  final DonorTransactions data;
+  const DonorCard({super.key, required this.data});
 
   @override
   _DonorCardState createState() => _DonorCardState();
@@ -25,14 +25,17 @@ class _DonorCardState extends State<DonorCard> {
       child: Column(
         children: [
           ListTile(
+            leading: CircleAvatar(
+              child: Image.network(widget.data.donor.profilePic),
+            ),
             title: Text(
-              widget.donor.username,
+              widget.data.donor.fullName,
               style: textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             subtitle: Text(
-              "This Month: \$${widget.donor.monthlyAmount} | Total: \$${widget.donor.totalAmount}",
+              "This Month: ₹ ${widget.data.donationThisMonth} \nTotal: ₹ ${widget.data.totalDonations}",
               style: textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -58,18 +61,18 @@ class _DonorCardState extends State<DonorCard> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         children:
-            widget.donor.transactions.map((tx) {
+            widget.data.transactions.map((tx) {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "${tx.date.toLocal().toString().split(' ')[0]}",
+                      "${tx.createdAt.toDate().toLocal().toString().split(' ')[0]}",
                       style: textTheme.bodySmall,
                     ),
                     Text(
-                      "\$${tx.amount}",
+                      "₹ ${tx.amount}",
                       style: textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),

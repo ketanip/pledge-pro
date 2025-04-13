@@ -3,7 +3,7 @@ import 'package:sponsor_karo/components/analytics/donor_card.dart';
 import 'package:sponsor_karo/types.dart';
 
 class TopDonorsPage extends StatefulWidget {
-  final List<Donor> allDonors;
+  final List<DonorTransactions> allDonors;
   const TopDonorsPage({super.key, required this.allDonors});
 
   @override
@@ -11,7 +11,7 @@ class TopDonorsPage extends StatefulWidget {
 }
 
 class _TopDonorsPageState extends State<TopDonorsPage> {
-  late List<Donor> filteredDonors;
+  late List<DonorTransactions> filteredDonors;
   final TextEditingController searchController = TextEditingController();
 
   @override
@@ -26,7 +26,11 @@ class _TopDonorsPageState extends State<TopDonorsPage> {
       final query = searchController.text.toLowerCase();
       filteredDonors =
           widget.allDonors
-              .where((donor) => donor.username.toLowerCase().contains(query))
+              .where(
+                (data) =>
+                    data.donor.username.toLowerCase().contains(query) ||
+                    data.donor.fullName.contains(query),
+              )
               .toList();
     });
   }
@@ -71,7 +75,7 @@ class _TopDonorsPageState extends State<TopDonorsPage> {
                     : ListView.builder(
                       itemCount: filteredDonors.length,
                       itemBuilder: (context, index) {
-                        return DonorCard(donor: filteredDonors[index]);
+                        return DonorCard(data: filteredDonors[index]);
                       },
                     ),
           ),

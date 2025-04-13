@@ -112,9 +112,8 @@ class PaymentsService {
   }
 
   /// Get subscriptions by beneficiary_id
-  Future<List<Subscription>> getSubscriptionsByBeneficiary(
-    String beneficiaryId,
-  ) async {
+  Future<List<Subscription>> getSubscriptionsByBeneficiary() async {
+    final beneficiaryId = _firebaseAuth.currentUser?.uid ?? "";
     final snapshot =
         await firestore
             .collection('subscriptions')

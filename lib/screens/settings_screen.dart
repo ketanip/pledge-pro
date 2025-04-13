@@ -91,6 +91,40 @@ class _SettingsPageState extends State<SettingsPage> {
                         );
                       },
                     ),
+
+                    Spacer(),
+
+                    Center(
+                      child: RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          children: [
+                            TextSpan(text: 'To register as an athlete, '),
+                            TextSpan(
+                              text: 'add details your profile',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(text: '. Once you receive '),
+                            TextSpan(
+                              text: '₹1000',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(
+                              text:
+                                  ' in donations, we will contact you to process your ',
+                            ),
+                            TextSpan(
+                              text: 'payout',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(text: '.'),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 10),
                   ],
                 ),
               ),

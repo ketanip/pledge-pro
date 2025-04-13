@@ -1,136 +1,195 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sponsor_karo/components/analytics/charts.dart';
 import 'package:sponsor_karo/components/analytics/donor_card.dart';
 import 'package:sponsor_karo/components/analytics/top_donors_page.dart';
+import 'package:sponsor_karo/models/public_profile.dart';
+import 'package:sponsor_karo/models/transaction.dart';
+import 'package:sponsor_karo/screens/transactions_screen.dart';
+import 'package:sponsor_karo/services/follow_service.dart';
+import 'package:sponsor_karo/services/payments_service.dart';
+import 'package:sponsor_karo/services/public_profile_service.dart';
+import 'package:sponsor_karo/state/user_provider.dart';
 import 'package:sponsor_karo/types.dart';
 
-// ----- Demo Data ----- //
+final plansData = {
+  "plan_QDMGibsikMSB6q": 2000,
+  "plan_QDMGYPxhlUaYWk": 1000,
+  "plan_QDMGQ1YxILqHvm": 500,
+  "plan_QDMGAvWIpjPRQT": 100,
+};
 
-final List<Donor> demoDonors = [
-  Donor(
-    username: 'Alice',
-    monthlyAmount: 200,
-    totalAmount: 1500,
-    transactions: [
-      DonationTransaction(
-        id: 'a1',
-        amount: 100,
-        date: DateTime.parse("2025-03-01"),
-      ),
-      DonationTransaction(
-        id: 'a2',
-        amount: 100,
-        date: DateTime.parse("2025-03-15"),
-      ),
-    ],
-  ),
-  Donor(
-    username: 'Bob',
-    monthlyAmount: 150,
-    totalAmount: 1200,
-    transactions: [
-      DonationTransaction(
-        id: 'b1',
-        amount: 75,
-        date: DateTime.parse("2025-03-05"),
-      ),
-      DonationTransaction(
-        id: 'b2',
-        amount: 75,
-        date: DateTime.parse("2025-03-20"),
-      ),
-    ],
-  ),
-  Donor(
-    username: 'Charlie',
-    monthlyAmount: 300,
-    totalAmount: 2500,
-    transactions: [
-      DonationTransaction(
-        id: 'c1',
-        amount: 150,
-        date: DateTime.parse("2025-03-03"),
-      ),
-      DonationTransaction(
-        id: 'c2',
-        amount: 150,
-        date: DateTime.parse("2025-03-18"),
-      ),
-    ],
-  ),
-  Donor(
-    username: 'Diana',
-    monthlyAmount: 180,
-    totalAmount: 1100,
-    transactions: [
-      DonationTransaction(
-        id: 'd1',
-        amount: 90,
-        date: DateTime.parse("2025-03-07"),
-      ),
-      DonationTransaction(
-        id: 'd2',
-        amount: 90,
-        date: DateTime.parse("2025-03-22"),
-      ),
-    ],
-  ),
-  Donor(
-    username: 'Edward',
-    monthlyAmount: 220,
-    totalAmount: 1300,
-    transactions: [
-      DonationTransaction(
-        id: 'e1',
-        amount: 110,
-        date: DateTime.parse("2025-03-09"),
-      ),
-      DonationTransaction(
-        id: 'e2',
-        amount: 110,
-        date: DateTime.parse("2025-03-24"),
-      ),
-    ],
-  ),
-  // More donors can be added...
-];
-
-final List<Map<String, String>> kpiList = [
-  {
-    'title': 'Donations This Month',
-    'value': '\$100,000',
-    'description': 'Total donations received this month',
-  },
-  {
-    'title': 'Total Pledges',
-    'value': '\$1573',
-    'description': 'Number of recurring pledges',
-  },
-  {
-    'title': 'Money Expected',
-    'value': '\$50,000',
-    'description': 'Expected monthly pledge amount',
-  },
-  {
-    'title': 'Followers',
-    'value': '95435',
-    'description': 'Total followers count',
-  },
-  {
-    'title': 'Views',
-    'value': '51653424',
-    'description': 'Total page views this month',
-  },
-];
-
-class AnalyticsPage extends StatelessWidget {
+class AnalyticsPage extends StatefulWidget {
   const AnalyticsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  State<AnalyticsPage> createState() => _AnalyticsPageState();
+}
 
+class _AnalyticsPageState extends State<AnalyticsPage> {
+  final PublicProfileService _publicProfileService = PublicProfileService();
+  final PaymentsService _paymentsService = PaymentsService();
+  final FollowService _followService = FollowService();
+
+  List<DonorTransactions> _donors = [];
+  List<Map<String, String>> _kpiList = [];
+  Map<DateTime, int> _donationsChartsData = HashMap();
+  Map<DateTime, int> _subscriptionChartData = HashMap();
+
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
+
+  Future<List<DonorTransactions>> _groupTransactionsWithDonor(
+    List<Transaction> transactions,
+  ) async {
+    final Map<String, List<Transaction>> grouped = {};
+
+    // Group transactions by donorId
+    for (var transaction in transactions) {
+      grouped.putIfAbsent(transaction.donorId, () => []);
+      grouped[transaction.donorId]!.add(transaction);
+    }
+
+    List<DonorTransactions> result = [];
+
+    for (var entry in grouped.entries) {
+      // Fetch the PublicProfile for the donor asynchronously
+      PublicProfile donorProfile = await _publicProfileService
+          .getPublicProfileBySub(entry.key);
+
+      int donationThisMonth = 0;
+      int totalDonations = 0;
+
+      // Calculate donations
+      DateTime currentMonth = DateTime.now();
+      for (var transaction in entry.value) {
+        totalDonations += transaction.amount;
+
+        // Check if the transaction was made in the current month
+        if (transaction.createdAt.toDate().year == currentMonth.year &&
+            transaction.createdAt.toDate().month == currentMonth.month) {
+          donationThisMonth += transaction.amount;
+        }
+      }
+
+      // Create a DonorTransactions instance and add it to the result
+      result.add(
+        DonorTransactions(
+          donor: donorProfile,
+          transactions: entry.value,
+          donationThisMonth: donationThisMonth,
+          totalDonations: totalDonations,
+        ),
+      );
+    }
+
+    return result;
+  }
+
+  void loadData() async {
+    // CURRENT USER
+    final user = Provider.of<UserProvider>(context, listen: false).currentUser;
+    if (user == null) return;
+
+    // DONATIONS
+    final donations = await _paymentsService.getAllDonationsReceived();
+
+    // Donors Data
+    final donors = await _groupTransactionsWithDonor(donations);
+
+    int totalDonationsValue = 0;
+    int totalDonationThisMonth = 0;
+    final DateTime now = DateTime.now();
+
+    final Map<DateTime, int> donationsChartData = HashMap();
+
+    for (final item in donations) {
+      totalDonationsValue += item.amount;
+
+      if (item.createdAt.toDate().month == now.month) {
+        totalDonationThisMonth += item.amount;
+      }
+
+      donationsChartData.update(
+        item.createdAt.toDate(),
+        (val) => val += item.amount,
+        ifAbsent: () => item.amount,
+      );
+    }
+
+    // PLEDGES
+    final subscriptions =
+        await _paymentsService.getSubscriptionsByBeneficiary();
+
+    int totalActiveSubscriptions = 0;
+    int totalExpectedRevenue = 0;
+    final Map<DateTime, int> subscriptionChartData = HashMap();
+
+    for (final item in subscriptions) {
+      if (item.status != "active") continue;
+      totalActiveSubscriptions++;
+      totalExpectedRevenue += plansData[item.planId] ?? 0;
+
+      subscriptionChartData.update(
+        item.createdAt.toDate(),
+        (val) => val += 1,
+        ifAbsent: () => 1,
+      );
+    }
+
+    // FOLLOWERS
+    int totalFollowers = 0;
+    final followers = await _followService.getFollowers(user.username);
+    totalFollowers = followers.length;
+
+    final List<Map<String, String>> kpiList = [
+      {
+        'title': 'Donations This Month',
+        'value': '₹$totalDonationThisMonth',
+        'description': 'Total donations received this month',
+      },
+      {
+        'title': 'Total Donations',
+        'value': '₹$totalDonationsValue',
+        'description': 'Total donations till date.',
+      },
+      {
+        'title': 'Total Pledges',
+        'value': '$totalActiveSubscriptions',
+        'description': 'Number of recurring pledges',
+      },
+      {
+        'title': 'Pledge Revenue',
+        'value': '₹$totalExpectedRevenue',
+        'description': 'Expected monthly pledge amount',
+      },
+      {
+        'title': 'Followers',
+        'value': '$totalFollowers',
+        'description': 'Total followers count',
+      },
+    ];
+
+    print("Donations Chart Data: $donationsChartData");
+    print("Subscriptions Chart Data: $subscriptionChartData");
+
+    setState(() {
+      _kpiList = kpiList;
+      _donors = donors;
+      _donationsChartsData = donationsChartData;
+      _subscriptionChartData = subscriptionChartData;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Display only the top 5 donors here.
-    final List<Donor> topDonors = demoDonors.take(5).toList();
+    final List<DonorTransactions> topDonors = _donors.take(5).toList();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -152,12 +211,12 @@ class AnalyticsPage extends StatelessWidget {
                   crossAxisSpacing: 8,
                   mainAxisSpacing: 8,
                 ),
-                itemCount: kpiList.length,
+                itemCount: _kpiList.length,
                 itemBuilder: (context, index) {
                   return _buildKpiCard(
-                    kpiList[index]['title']!,
-                    kpiList[index]['value']!,
-                    kpiList[index]['description']!,
+                    _kpiList[index]['title']!,
+                    _kpiList[index]['value']!,
+                    _kpiList[index]['description']!,
                     Theme.of(context), // Using theme dynamically
                   );
                 },
@@ -166,7 +225,12 @@ class AnalyticsPage extends StatelessWidget {
           ),
 
           const SizedBox(height: 16),
-          AnalyticsCharts(),
+
+          AnalyticsCharts(
+            donationsChartData: _donationsChartsData,
+            subscriptionChartData: _subscriptionChartData,
+          ),
+
           const SizedBox(height: 32),
 
           // Top Donors Section
@@ -182,7 +246,7 @@ class AnalyticsPage extends StatelessWidget {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: topDonors.length,
-            itemBuilder: (context, index) => DonorCard(donor: topDonors[index]),
+            itemBuilder: (context, index) => DonorCard(data: topDonors[index]),
           ),
 
           const SizedBox(height: 12),
@@ -192,7 +256,7 @@ class AnalyticsPage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => TopDonorsPage(allDonors: demoDonors),
+                    builder: (_) => TopDonorsPage(allDonors: _donors),
                   ),
                 );
               },
@@ -221,7 +285,7 @@ class AnalyticsPage extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(6,12,6,6),
+          padding: const EdgeInsets.fromLTRB(6, 12, 6, 6),
           child: Column(
             mainAxisSize:
                 MainAxisSize.min, // Allows dynamic height based on content
@@ -241,7 +305,7 @@ class AnalyticsPage extends StatelessWidget {
                     false, // Prevent wrapping if using ellipsis on single line
               ),
               const SizedBox(height: 4),
-        
+
               // KPI Title - Handle potential long text with ellipsis
               Text(
                 title,
@@ -253,7 +317,6 @@ class AnalyticsPage extends StatelessWidget {
                 overflow: TextOverflow.ellipsis, // Show ... if too long
                 softWrap: true, // Allow wrapping up to maxLines
               ),
-        
             ],
           ),
         ),

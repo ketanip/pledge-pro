@@ -1,71 +1,108 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
-class AnalyticsCharts extends StatelessWidget {
-  final List<ChartData> userGrowthData = [
-    ChartData(DateTime(2024, 1, 1), 50000, 1200, 30000),
-    ChartData(DateTime(2024, 2, 1), 60000, 1500, 35000),
-    ChartData(DateTime(2024, 3, 1), 75000, 1700, 45000),
-    ChartData(DateTime(2024, 4, 1), 90000, 2000, 60000),
-    ChartData(DateTime(2024, 5, 1), 95000, 2500, 70000),
-  ];
+class AnalyticsCharts extends StatefulWidget {
+  final Map<DateTime, int> donationsChartData;
+  final Map<DateTime, int> subscriptionChartData;
 
-  AnalyticsCharts({super.key});
+  const AnalyticsCharts({
+    super.key,
+    required this.donationsChartData,
+    required this.subscriptionChartData,
+  });
+
+  @override
+  State<AnalyticsCharts> createState() => _AnalyticsChartsState();
+}
+
+/// 📊 Data model for the charts
+class ChartData {
+  final DateTime date;
+  final int value;
+
+  ChartData(this.date, this.value);
+}
+
+/// Converts a Map<DateTime, int> to a sorted list of ChartData
+List<ChartData> convertMapToChartData(Map<DateTime, int> map) {
+  return map.entries.map((entry) => ChartData(entry.key, entry.value)).toList()
+    ..sort((a, b) => a.date.compareTo(b.date));
+}
+
+class _AnalyticsChartsState extends State<AnalyticsCharts> {
+  late List<ChartData> _donationsChartData;
+  late List<ChartData> _subscriptionChartData;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateChartData();
+  }
+
+  @override
+  void didUpdateWidget(covariant AnalyticsCharts oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Only update if data actually changed
+    if (widget.donationsChartData != oldWidget.donationsChartData ||
+        widget.subscriptionChartData != oldWidget.subscriptionChartData) {
+      _updateChartData();
+    }
+  }
+
+  void _updateChartData() {
+    _donationsChartData = convertMapToChartData(widget.donationsChartData);
+    _subscriptionChartData = convertMapToChartData(
+      widget.subscriptionChartData,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 16),
-        _buildUsersOverTimeChart(),
+        const SizedBox(height: 16),
+        _buildChart("Donations", _donationsChartData, Colors.purple, "₹"),
 
-        SizedBox(height: 16),
-        _buildRevenueOverTimeChart(),
-      ],
-    );
-  }
-
-  /// 📊 Area Chart for Users Growth Over Time
-  Widget _buildUsersOverTimeChart() {
-    return SfCartesianChart(
-      primaryXAxis: DateTimeAxis(),
-      primaryYAxis: NumericAxis(labelFormat: '{value}'),
-      legend: Legend(isVisible: true),
-      tooltipBehavior: TooltipBehavior(enable: true),
-      series: <CartesianSeries<ChartData, DateTime>>[
-        AreaSeries<ChartData, DateTime>(
-          name: 'Followers',
-          dataSource: userGrowthData,
-          xValueMapper: (ChartData data, _) => data.date,
-          yValueMapper: (ChartData data, _) => data.followers,
-          gradient: _buildGradient(Colors.blue),
-        ),
-        AreaSeries<ChartData, DateTime>(
-          name: 'Pledges',
-          dataSource: userGrowthData,
-          xValueMapper: (ChartData data, _) => data.date,
-          yValueMapper: (ChartData data, _) => data.pledges,
-          gradient: _buildGradient(Colors.green),
+        const SizedBox(height: 16),
+        _buildChart(
+          "New Pledges (Subscribers)",
+          _subscriptionChartData,
+          Colors.blueAccent,
+          "",
         ),
       ],
     );
   }
 
   /// 📈 Area Chart for Revenue Over Time
-  Widget _buildRevenueOverTimeChart() {
+  Widget _buildChart(
+    String title,
+    List<ChartData> data,
+    Color color,
+    String precedeValue,
+  ) {
+    if (data.isEmpty) {
+      return Text(
+        '$title data not available',
+        style: const TextStyle(color: Colors.grey),
+      );
+    }
+
     return SfCartesianChart(
       primaryXAxis: DateTimeAxis(),
-      primaryYAxis: NumericAxis(labelFormat: '\${value}'),
+      primaryYAxis: NumericAxis(labelFormat: '$precedeValue{value}'),
       legend: Legend(isVisible: true),
       tooltipBehavior: TooltipBehavior(enable: true),
       series: <CartesianSeries<ChartData, DateTime>>[
         AreaSeries<ChartData, DateTime>(
-          name: 'Revenue',
-          dataSource: userGrowthData,
-          xValueMapper: (ChartData data, _) => data.date,
-          yValueMapper: (ChartData data, _) => data.revenue,
-          gradient: _buildGradient(Colors.purple),
+          name: title,
+          dataSource: data,
+          xValueMapper: (ChartData data, _) => data.date.toLocal(),
+          yValueMapper: (ChartData data, _) => data.value,
+          gradient: _buildGradient(color),
         ),
       ],
     );
@@ -79,14 +116,4 @@ class AnalyticsCharts extends StatelessWidget {
       end: Alignment.bottomCenter,
     );
   }
-}
-
-/// 📊 Data model for the charts
-class ChartData {
-  final DateTime date;
-  final int followers;
-  final int pledges;
-  final int revenue;
-
-  ChartData(this.date, this.followers, this.pledges, this.revenue);
 }
