@@ -36,6 +36,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   List<Map<String, String>> _kpiList = [];
   Map<DateTime, int> _donationsChartsData = HashMap();
   Map<DateTime, int> _subscriptionChartData = HashMap();
+  bool isAthlete = true;
 
   @override
   void initState() {
@@ -189,6 +190,40 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   Widget build(BuildContext context) {
     // Display only the top 5 donors here.
     final List<DonorTransactions> topDonors = _donors.take(5).toList();
+
+    if (_donors.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.people_outline,
+                size: 60,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                "No donations yet",
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "This page will activate once you receive a donation.",
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withAlpha(90),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
