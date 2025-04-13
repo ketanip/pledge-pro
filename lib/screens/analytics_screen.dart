@@ -7,7 +7,6 @@ import 'package:sponsor_karo/components/analytics/donor_card.dart';
 import 'package:sponsor_karo/components/analytics/top_donors_page.dart';
 import 'package:sponsor_karo/models/public_profile.dart';
 import 'package:sponsor_karo/models/transaction.dart';
-import 'package:sponsor_karo/screens/transactions_screen.dart';
 import 'package:sponsor_karo/services/follow_service.dart';
 import 'package:sponsor_karo/services/payments_service.dart';
 import 'package:sponsor_karo/services/public_profile_service.dart';
