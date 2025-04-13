@@ -40,12 +40,6 @@ class _DonorCardState extends State<DonorCard> {
                 color: colorScheme.onSurfaceVariant,
               ),
             ),
-            trailing: IconButton(
-              icon: Icon(Icons.message, color: colorScheme.primary),
-              onPressed: () {
-                // Trigger message action
-              },
-            ),
             onTap: () {
               setState(() => _expanded = !_expanded);
             },
