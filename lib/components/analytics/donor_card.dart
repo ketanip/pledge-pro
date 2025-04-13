@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sponsor_karo/screens/user_profile.dart';
 import 'package:sponsor_karo/types.dart';
 
 class DonorCard extends StatefulWidget {
@@ -54,27 +55,57 @@ class _DonorCardState extends State<DonorCard> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
-        children:
-            widget.data.transactions.map((tx) {
-              return Padding(
+        children: [
+          // DATA
+          ...widget.data.transactions.map((tx) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "${tx.createdAt.toDate().toLocal().toString().split(' ')[0]}",
+                    style: textTheme.bodySmall,
+                  ),
+                  Text(
+                    "₹ ${tx.amount}",
+                    style: textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+
+          SizedBox(height: 15),
+
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (_) => UserProfileScreen(
+                          username: widget.data.donor.username,
+                        ),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "${tx.createdAt.toDate().toLocal().toString().split(' ')[0]}",
-                      style: textTheme.bodySmall,
-                    ),
-                    Text(
-                      "₹ ${tx.amount}",
-                      style: textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
+                textStyle: Theme.of(context).textTheme.labelLarge,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              ),
+              child: const Text("Visit Profile"),
+            ),
+          ),
+
+          SizedBox(height: 15),
+        ],
       ),
     );
   }
