@@ -175,9 +175,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       },
     ];
 
-    print("Donations Chart Data: $donationsChartData");
-    print("Subscriptions Chart Data: $subscriptionChartData");
-
     setState(() {
       _kpiList = kpiList;
       _donors = donors;
